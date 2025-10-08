@@ -1,0 +1,1 @@
+"# FinancialDataPipeline\n\nThis repository contains AWS Glue job scripts and Infrastructure as Code for the financial data pipeline project.\n\nFolders:\n- glue_jobs/: AWS Glue scripts\n- iac/: Infrastructure as Code scripts\n\nRefer to this README for setup instructions." 
