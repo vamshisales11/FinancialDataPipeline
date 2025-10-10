@@ -1,0 +1,14 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+crash.log
+
+# Python
+__pycache__/
+*.pyc
+
+# VSCode and OS
+.vscode/
+.DS_Store
