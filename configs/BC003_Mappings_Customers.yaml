@@ -1,0 +1,16 @@
+dataset: customers
+source_system: core_banking
+raw_to_silver:
+  customer_: customer_id
+  first_name: first_name
+  last_name: last_name
+  date_of_b: date_of_birth
+  gender: gender
+  marital_st: marital_status
+  occupatio: occupation
+  income: annual_income
+  city: city
+  state: state
+  country: country
+  join_date: join_date
+date_format_raw: dd-MM-yy

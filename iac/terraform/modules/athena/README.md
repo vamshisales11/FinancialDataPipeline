@@ -1,0 +1,1 @@
+Purpose: workgroups, output locations

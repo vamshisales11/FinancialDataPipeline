@@ -1,0 +1,1 @@
+Purpose: CloudWatch dashboards and alarms (DataSync, Firehose, Glue, DQ)
