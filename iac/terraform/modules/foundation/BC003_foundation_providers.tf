@@ -6,3 +6,9 @@ terraform {
     }
   }
 }
+
+# Declare the alias used inside this module so Terraform knows about aws.notags
+# Config (region, etc.) comes from the root module mapping
+provider "aws" {
+  alias = "notags"
+}

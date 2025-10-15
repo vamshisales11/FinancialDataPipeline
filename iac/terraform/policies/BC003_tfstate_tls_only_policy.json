@@ -10,8 +10,8 @@
                                         },
                           "Principal":  "*",
                           "Resource":  [
-                                           "arn:aws:s3:::bc003-tfstate-743771860567-us-east-1",
-                                           "arn:aws:s3:::bc003-tfstate-743771860567-us-east-1/*"
+                                           "arn:aws:s3:::bc003-tfstate-844840482726-us-east-1",
+                                           "arn:aws:s3:::bc003-tfstate-844840482726-us-east-1/*"
                                        ],
                           "Effect":  "Deny",
                           "Sid":  "DenyInsecureTransport"

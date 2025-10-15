@@ -12,3 +12,10 @@ __pycache__/
 # VSCode and OS
 .vscode/
 .DS_Store
+
+
+# Data files to always ignore
+data/
+*.csv
+*.json
+*.jsonl

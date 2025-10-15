@@ -4,7 +4,7 @@ terraform {
     aws = { source = "hashicorp/aws", version = "~> 5.50" }
   }
   backend "s3" {
-    bucket         = "bc003-tfstate-743771860567-us-east-1"
+    bucket         = "bc003-tfstate-844840482726-us-east-1"
     key            = "iac/terraform/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "bc003-tfstate-lock"
@@ -12,6 +12,7 @@ terraform {
   }
 }
 
+# Default provider (with default_tags for everything except IAM roles)
 provider "aws" {
   region = "us-east-1"
   default_tags {
@@ -23,13 +24,34 @@ provider "aws" {
   }
 }
 
-module "foundation" {
-  source      = "./modules/foundation"
+provider "aws" {
+  alias  = "notags"
+  region = "us-east-1"
+}
+
+module "bronze" {
+  source      = "./modules/bronze"
   name_prefix = "bc003"
   region      = "us-east-1"
   tags        = { owner = "vamshi" }
 
-  enable_cmk                 = false
-  enable_kms_data_use_policy = false
-  create_kms_alias           = false
+  providers = {
+    aws        = aws
+    aws.notags = aws.notags
+  }
+  enable_datasync = true
+  enable_firehose = false # set to true later when Firehose is fully enabled and PassRole allowed
+}
+
+
+module "silver" {
+  source             = "./modules/silver"
+  name_prefix        = "bc003"
+  region             = "us-east-1"
+  tags               = { owner = "vamshi" }
+  bronze_bucket_name = module.bronze.bronze_bucket_name
+  providers = {
+    aws        = aws
+    aws.notags = aws.notags
+  }
 }
