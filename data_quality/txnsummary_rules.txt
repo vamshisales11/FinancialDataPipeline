@@ -1,0 +1,7 @@
+Rules = [
+    # Transaction count validation - ensure positive values
+    ColumnValues "txn_count" > 0,
+    
+    # Total amount validation - ensure non-negative values
+    ColumnValues "total_amount" >= 0
+]

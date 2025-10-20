@@ -1,0 +1,7 @@
+Rules = [
+    # Primary key check - ensure customer_id is unique
+    IsUnique "customer_id",
+    
+    # Balance validation - ensure non-negative values
+    ColumnValues "total_balance" >= 0
+]

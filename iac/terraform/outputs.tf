@@ -39,3 +39,17 @@ output "glue_silver_db" {
 output "glue_job_role_arn" {
   value = module.silver.glue_job_role_arn
 }
+
+
+output "gold_bucket_name" {
+  value = module.gold.gold_bucket_name
+}
+
+output "glue_gold_db" {
+  value = module.gold.glue_gold_db
+}
+
+output "glue_gold_role_arn" {
+  value = module.gold.glue_gold_role_arn
+}
+

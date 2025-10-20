@@ -55,3 +55,29 @@ module "silver" {
     aws.notags = aws.notags
   }
 }
+
+
+module "gold" {
+  source             = "./modules/gold"
+  name_prefix        = "bc003"
+  region             = "us-east-1"
+  tags               = { owner = "vamshi" }
+  silver_bucket_name = module.silver.silver_bucket_name
+
+  providers = {
+    aws        = aws
+    aws.notags = aws.notags
+  }
+}
+
+module "athena" {
+  source      = "./modules/athena"
+  name_prefix = "bc003"
+  region      = "us-east-1"
+  gold_bucket = module.gold.gold_bucket_name
+  tags        = { owner = "vamshi" }
+
+  providers = {
+    aws = aws
+  }
+}

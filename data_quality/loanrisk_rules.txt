@@ -1,0 +1,7 @@
+Rules = [
+    # Primary key check - ensure loan_id is unique
+    IsUnique "loan_id",
+    
+    # Risk flag validation - ensure only valid risk levels
+    ColumnValues "risk_flag" in ["High Risk", "Medium Risk", "Low Risk"]
+]
