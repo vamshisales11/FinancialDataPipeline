@@ -19,7 +19,7 @@ variable "silver_bucket_name" {
 data "aws_caller_identity" "current" {}
 
 locals {
-  account_id   = data.aws_caller_identity.current.account_id
-  gold_bucket  = "${var.name_prefix}-gold-${local.account_id}-${var.region}"
-  common_tags  = merge({ project = var.name_prefix, layer = "gold" }, var.tags)
+  account_id  = data.aws_caller_identity.current.account_id
+  gold_bucket = "${var.name_prefix}-gold-${local.account_id}-${var.region}"
+  common_tags = merge({ project = var.name_prefix, layer = "gold" }, var.tags)
 }

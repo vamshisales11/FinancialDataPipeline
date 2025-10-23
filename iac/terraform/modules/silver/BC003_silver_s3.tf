@@ -50,13 +50,13 @@ resource "aws_s3_bucket_policy" "silver_tls_only" {
   bucket = aws_s3_bucket.silver.id
 
   policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [{
       Sid       = "DenyInsecureTransport"
       Effect    = "Deny"
       Principal = "*"
       Action    = "s3:*"
-      Resource  = [
+      Resource = [
         aws_s3_bucket.silver.arn,
         "${aws_s3_bucket.silver.arn}/*"
       ]
@@ -119,13 +119,13 @@ resource "aws_s3_bucket_policy" "artifacts_tls_only" {
   bucket = aws_s3_bucket.artifacts.id
 
   policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [{
       Sid       = "DenyInsecureTransport"
       Effect    = "Deny"
       Principal = "*"
       Action    = "s3:*"
-      Resource  = [
+      Resource = [
         aws_s3_bucket.artifacts.arn,
         "${aws_s3_bucket.artifacts.arn}/*"
       ]

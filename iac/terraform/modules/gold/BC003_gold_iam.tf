@@ -21,7 +21,7 @@ data "aws_iam_policy_document" "gold_glue_inline" {
   statement {
     sid     = "ListBuckets"
     effect  = "Allow"
-    actions = ["s3:GetBucketLocation","s3:ListBucket"]
+    actions = ["s3:GetBucketLocation", "s3:ListBucket"]
     resources = [
       "arn:aws:s3:::${var.silver_bucket_name}",
       aws_s3_bucket.gold.arn
@@ -30,19 +30,19 @@ data "aws_iam_policy_document" "gold_glue_inline" {
 
   # allow Glue to list the artifacts bucket so pip can locate the wheel
   statement {
-    sid     = "ListArtifactsBucket"
-    effect  = "Allow"
-    actions = ["s3:ListBucket"]
+    sid       = "ListArtifactsBucket"
+    effect    = "Allow"
+    actions   = ["s3:ListBucket"]
     resources = ["arn:aws:s3:::bc003-artifacts-844840482726-us-east-1"]
   }
 
 
   statement {
-    sid     = "ReadSilverWriteGold"
-    effect  = "Allow"
+    sid    = "ReadSilverWriteGold"
+    effect = "Allow"
     actions = [
-      "s3:GetObject","s3:GetObjectVersion",
-      "s3:PutObject","s3:DeleteObject"
+      "s3:GetObject", "s3:GetObjectVersion",
+      "s3:PutObject", "s3:DeleteObject"
     ]
     resources = [
       "arn:aws:s3:::${var.silver_bucket_name}/*",
@@ -52,18 +52,18 @@ data "aws_iam_policy_document" "gold_glue_inline" {
 
   # allow script reads from artifacts bucket
   statement {
-  sid     = "ReadArtifactsScript"
-  effect  = "Allow"
-  actions = ["s3:GetObject","s3:GetObjectVersion"]
-  resources = ["arn:aws:s3:::bc003-artifacts-844840482726-us-east-1/*"]
-}
+    sid       = "ReadArtifactsScript"
+    effect    = "Allow"
+    actions   = ["s3:GetObject", "s3:GetObjectVersion"]
+    resources = ["arn:aws:s3:::bc003-artifacts-844840482726-us-east-1/*"]
+  }
 
   statement {
-    sid     = "GlueAndLogs"
-    effect  = "Allow"
+    sid    = "GlueAndLogs"
+    effect = "Allow"
     actions = [
       "glue:*",
-      "logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"
+      "logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"
     ]
     resources = ["*"]
   }

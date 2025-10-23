@@ -27,8 +27,8 @@ data "aws_iam_policy_document" "athena_assume" {
 data "aws_iam_policy_document" "athena_exec_policy" {
   # Allow Athena to read/write query outputs
   statement {
-    sid     = "S3AthenaResultsIO"
-    effect  = "Allow"
+    sid    = "S3AthenaResultsIO"
+    effect = "Allow"
     actions = [
       "s3:ListBucket",
       "s3:GetObject",
@@ -43,8 +43,8 @@ data "aws_iam_policy_document" "athena_exec_policy" {
 
   # Allow Athena and Glue to read Gold data
   statement {
-    sid     = "S3GoldRead"
-    effect  = "Allow"
+    sid    = "S3GoldRead"
+    effect = "Allow"
     actions = [
       "s3:ListBucket",
       "s3:GetObject"
@@ -57,8 +57,8 @@ data "aws_iam_policy_document" "athena_exec_policy" {
 
   # Allow Data Catalog access
   statement {
-    sid     = "GlueCatalogRead"
-    effect  = "Allow"
+    sid    = "GlueCatalogRead"
+    effect = "Allow"
     actions = [
       "glue:GetDatabase",
       "glue:GetDatabases",
@@ -70,8 +70,8 @@ data "aws_iam_policy_document" "athena_exec_policy" {
 
   # Allow Athena APIs for query execution
   statement {
-    sid     = "AthenaAPIs"
-    effect  = "Allow"
+    sid    = "AthenaAPIs"
+    effect = "Allow"
     actions = [
       "athena:StartQueryExecution",
       "athena:GetQueryExecution",

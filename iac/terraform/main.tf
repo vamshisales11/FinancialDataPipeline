@@ -81,3 +81,37 @@ module "athena" {
     aws = aws
   }
 }
+
+
+module "monitoring" {
+  source      = "./modules/monitoring"
+  name_prefix = "bc003"
+  region      = "us-east-1"
+  tags        = { owner = "vamshi" }
+
+  providers = {
+    aws        = aws
+    aws.notags = aws.notags
+  }
+
+  glue_job_names = [
+    #"bc003-bronze-to-silver", removed job name filter
+    #"bc003-silver-to-gold"
+  ]
+
+  datasync_task_arns = [
+    for arn in [  
+      module.bronze.datasync_core_task_arn,
+      module.bronze.datasync_loan_task_arn
+    ] : arn if arn != null
+  ]
+
+  # Deploy now without SNS permissions
+  enable_alerts    = false
+  create_sns_topic = false
+
+  # Later, when permitted:
+  # enable_alerts    = true
+  # create_sns_topic = true                    # or keep false and provide sns_topic_arn = "arn:aws:sns:..."
+  # alert_emails     = ["you@example.com"]
+}

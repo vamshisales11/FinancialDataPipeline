@@ -1,14 +1,16 @@
 """
-BC003 | Silver → Gold Data Transformation Job
-Author: vamshi
-Project: Scalable Financial Data Pipeline for Customer Analytics
-
+BC003 | Silver → Gold Data Transformation Job (SCD Type 1, Delta Lake)
+Author: Vamshi
+Project: Scalable Financial Data Pipeline for Customer Analytics
 Purpose:
-    Transform clean Silver-layer datasets into curated Gold-layer tables.
-    Implements SCD Type 1 (overwrite) logic to produce:
-      1️⃣ Customer360    – unified customer profile with account & transaction summaries.
-      2️⃣ LoanRisk       – loans enriched with repayment analytics and risk signals.
-      3️⃣ Txn_Summary    – aggregated transaction metrics by type and category.
+    Transform clean Silver‑layer datasets into curated Gold‑layer tables.
+    Implements SCD Type 1 (overwrite current snapshot fields) using Delta Lake
+    in‑place merges for safe, ACID‑compliant updates.
+
+    Outputs:
+      1️⃣ Customer360     – unified customer profile
+      2️⃣ LoanRisk        – loans + repayment analytics + risk signals
+      3️⃣ Txn_Summary     – aggregated transaction KPIs
 """
 
 import sys
@@ -17,9 +19,10 @@ from awsglue.job import Job
 from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from pyspark.sql import functions as F
+from delta.tables import DeltaTable   # built‑in in Glue 4 & 5
 
 # ---------------------------------------------------------------------
-# 1️⃣ Initialization
+# 1️⃣ Initialization
 # ---------------------------------------------------------------------
 args = getResolvedOptions(sys.argv, ["JOB_NAME"])
 sc = SparkContext()
@@ -28,10 +31,10 @@ spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args["JOB_NAME"], args)
 
-print("✅ Glue job initialized and Spark session active.")
+print("✅ Glue job initialized and Spark session active.")
 
 # ---------------------------------------------------------------------
-# 2️⃣ Define Silver Data Inputs
+# 2️⃣ Define Silver Data Inputs
 # ---------------------------------------------------------------------
 silver = "s3://bc003-silver-844840482726-us-east-1"
 paths = {
@@ -42,7 +45,7 @@ paths = {
     "transactions": f"{silver}/transactions/"
 }
 
-print("🔹 Reading Silver datasets...")
+print("🔹 Reading Silver datasets ...")
 df_customers    = spark.read.parquet(paths["customers"])
 df_accounts     = spark.read.parquet(paths["accounts"])
 df_loans        = spark.read.parquet(paths["loans"])
@@ -50,7 +53,7 @@ df_loan_pymts   = spark.read.parquet(paths["loan_payments"])
 df_transactions = spark.read.parquet(paths["transactions"])
 
 # ---------------------------------------------------------------------
-# 3️⃣ Sanity & Normalization
+# 3️⃣ Sanity & Normalization
 # ---------------------------------------------------------------------
 df_customers    = df_customers.dropDuplicates(["customer_id"]).toDF(*[c.lower() for c in df_customers.columns])
 df_accounts     = df_accounts.dropDuplicates(["account_id"]).toDF(*[c.lower() for c in df_accounts.columns])
@@ -58,10 +61,10 @@ df_loans        = df_loans.dropDuplicates(["loan_id"]).toDF(*[c.lower() for c in
 df_loan_pymts   = df_loan_pymts.dropDuplicates(["payment_id"]).toDF(*[c.lower() for c in df_loan_pymts.columns])
 df_transactions = df_transactions.dropDuplicates(["transaction_id"]).toDF(*[c.lower() for c in df_transactions.columns])
 
-print("✅ Data normalization and deduplication complete.")
+print("✅ Data normalization and deduplication complete.")
 
 # ---------------------------------------------------------------------
-# 4️⃣ Build Customer360 Dataset
+# 4️⃣ Build Customer360 Dataset
 # ---------------------------------------------------------------------
 txn_summary_for_cust = (
     df_transactions.join(df_accounts, "account_id", "left")
@@ -109,10 +112,10 @@ customer360 = customer360.withColumn(
 )
 customer360 = customer360.withColumn("data_refresh_date", F.current_date())
 
-print("✅ Customer360 dataset built successfully.")
+print("✅ Customer360 dataset built successfully.")
 
 # ---------------------------------------------------------------------
-# 5️⃣ Build LoanRiskAnalytics Dataset
+# 5️⃣ Build LoanRisk Analytics Dataset
 # ---------------------------------------------------------------------
 payment_summary = (
     df_loan_pymts.groupBy("loan_id")
@@ -157,10 +160,10 @@ loan_risk = (
     .withColumn("data_refresh_date", F.current_date())
 )
 
-print("✅ LoanRisk analytics dataset created successfully.")
+print("✅ LoanRisk analytics dataset created successfully.")
 
 # ---------------------------------------------------------------------
-# 6️⃣ Build Txn_Summary Dataset (aggregated transaction KPIs)
+# 6️⃣ Build Txn_Summary Dataset
 # ---------------------------------------------------------------------
 txn_summary = (
     df_transactions.groupBy("transaction_type", "category")
@@ -171,20 +174,46 @@ txn_summary = (
     .withColumn("data_refresh_date", F.current_date())
 )
 
-print("✅ Transaction summary dataset created successfully.")
+print("✅ Transaction summary dataset created successfully.")
 
 # ---------------------------------------------------------------------
-# 7️⃣ Write Outputs to Gold Layer (SCD Type 1 – overwrite snapshot)
+# 7️⃣ Write Outputs to Gold Layer (SCD Type 1 in‑place merge)
 # ---------------------------------------------------------------------
 gold = "s3://bc003-gold-844840482726-us-east-1"
 
-print("📦 Writing Gold datasets...")
-customer360.write.mode("overwrite").format("parquet").partitionBy("country").save(f"{gold}/customer_360/")
-loan_risk.write.mode("overwrite").format("parquet").partitionBy("country").save(f"{gold}/loan_risk_analytics/")
-txn_summary.write.mode("overwrite").format("parquet").partitionBy("category").save(f"{gold}/txn_summary/")
+def scd1_merge(source_df, target_path, key_cols):
+    """
+    In‑place SCD Type 1 merge using Delta Lake.
+    Updates fields for existing keys, inserts new rows, no schema changes.
+    """
+    try:
+        delta_tbl = DeltaTable.forPath(spark, target_path)
+        (
+            delta_tbl.alias("t")
+            .merge(source_df.alias("s"), " AND ".join([f"t.{k}=s.{k}" for k in key_cols]))
+            .whenMatchedUpdateAll()
+            .whenNotMatchedInsertAll()
+            .execute()
+        )
+        print(f"✅ In‑place SCD1 merge completed for {target_path}")
+    except Exception as e:
+        print(f"⚙️ Creating new Delta table for {target_path}: {e}")
+        (source_df
+            .write
+            .format("delta")
+            .mode("overwrite")
+            .partitionBy([c for c in source_df.columns if c in ("country", "category")])
+            .save(target_path)
+        )
+
+print("📦 Performing in‑place SCD Type 1 merges for Gold datasets ...")
+
+scd1_merge(customer360, f"{gold}/customer_360", ["customer_id"])
+scd1_merge(loan_risk,   f"{gold}/loan_risk_analytics", ["loan_id"])
+scd1_merge(txn_summary, f"{gold}/txn_summary", ["transaction_type", "category"])
 
 # ---------------------------------------------------------------------
-# 8️⃣ Commit
+# 8️⃣ Commit
 # ---------------------------------------------------------------------
 job.commit()
-print("✅ Silver → Gold transformation completed successfully.")
+print("✅ Silver → Gold transformation and SCD Type 1 merge completed successfully.")

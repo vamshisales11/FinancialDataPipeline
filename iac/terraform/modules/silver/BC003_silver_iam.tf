@@ -18,10 +18,10 @@ resource "aws_iam_role" "glue_etl_role" {
 data "aws_iam_policy_document" "glue_etl_inline" {
   # List buckets / get location
   statement {
-    effect    = "Allow"
-    actions   = ["s3:GetBucketLocation", "s3:ListBucket"]
+    effect  = "Allow"
+    actions = ["s3:GetBucketLocation", "s3:ListBucket"]
     resources = [
-      "arn:aws:s3:::${var.bronze_bucket_name}", 
+      "arn:aws:s3:::${var.bronze_bucket_name}",
       aws_s3_bucket.silver.arn,
       aws_s3_bucket.artifacts.arn,
 
@@ -37,8 +37,8 @@ data "aws_iam_policy_document" "glue_etl_inline" {
 
   # Write Silver / Artifacts
   statement {
-    effect    = "Allow"
-    actions   = ["s3:PutObject", "s3:DeleteObject", "s3:AbortMultipartUpload"]
+    effect  = "Allow"
+    actions = ["s3:PutObject", "s3:DeleteObject", "s3:AbortMultipartUpload"]
     resources = [
       "${aws_s3_bucket.silver.arn}/*",
       "${aws_s3_bucket.artifacts.arn}/*",
@@ -47,8 +47,8 @@ data "aws_iam_policy_document" "glue_etl_inline" {
 
   # Glue + Logs
   statement {
-    effect    = "Allow"
-    actions   = [
+    effect = "Allow"
+    actions = [
       "glue:*",
       "logs:CreateLogGroup",
       "logs:CreateLogStream",

@@ -34,10 +34,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "gold" {
     id     = "intelligent-tiering"
     status = "Enabled"
     filter {}
-    transition { 
-        days = 0 
-        storage_class = "INTELLIGENT_TIERING" 
-        }
+    transition {
+      days          = 0
+      storage_class = "INTELLIGENT_TIERING"
+    }
   }
 }
 
@@ -47,12 +47,12 @@ resource "aws_s3_bucket_policy" "gold_tls_only" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Sid      = "DenyInsecureTransport",
-      Effect   = "Deny",
-      Principal= "*",
-      Action   = "s3:*",
-      Resource = [aws_s3_bucket.gold.arn,"${aws_s3_bucket.gold.arn}/*"],
-      Condition= { Bool = { "aws:SecureTransport"="false" } }
+      Sid       = "DenyInsecureTransport",
+      Effect    = "Deny",
+      Principal = "*",
+      Action    = "s3:*",
+      Resource  = [aws_s3_bucket.gold.arn, "${aws_s3_bucket.gold.arn}/*"],
+      Condition = { Bool = { "aws:SecureTransport" = "false" } }
     }]
   })
 }
