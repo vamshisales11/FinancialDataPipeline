@@ -100,7 +100,7 @@ module "monitoring" {
   ]
 
   datasync_task_arns = [
-    for arn in [  
+    for arn in [
       module.bronze.datasync_core_task_arn,
       module.bronze.datasync_loan_task_arn
     ] : arn if arn != null
@@ -115,3 +115,32 @@ module "monitoring" {
   # create_sns_topic = true                    # or keep false and provide sns_topic_arn = "arn:aws:sns:..."
   # alert_emails     = ["you@example.com"]
 }
+
+
+
+module "ml" {
+  source                = "./modules/ml"
+  name_prefix           = "bc003"
+  region                = "us-east-1"
+  artifacts_bucket_name = module.silver.artifacts_bucket_name
+
+  providers = {
+    aws        = aws
+    aws.notags = aws.notags
+  }
+
+  # Start simple: create Lambda + EventBridge only
+   lambda_zip_path = abspath("${path.root}/../../tools/ml_lambda/ml_alert.zip")
+   threshold       = 0.9
+  # sns_topic_arn = "arn:aws:sns:us-east-1:844840482726:existing-topic"  # optional
+
+  # Enable these in sequence once features are in place
+  enable_training        = false
+  enable_model           = false
+  enable_batch_transform = false
+
+  run_id = "v1" # bump to re-run transform via TF
+}
+
+
+
